@@ -14,7 +14,7 @@
   let playlists = [];
   const clientId = "da22f1252f514bb59be6b5588fddaf25";
   const redirectUri =
-    "https://4b5870aa-6a5a-490a-9f0a-02334b872cea-00-a5xkmb2gsb82.janeway.replit.dev/about/"; // Update with your redirect URI
+    "https://music-amrw5yi0w-martysmiths-projects.vercel.app/about/"; // Update with your redirect URI
   const scopes =
     "user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming app-remote-control user-read-email"; // Adjust scopes as needed
 
