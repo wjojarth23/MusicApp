@@ -1,0 +1,12 @@
+{
+  "files": {
+    "src/routes/about/+page.svelte": [
+      {
+        "id": "fd7834e9-6902-4b71-a9d4-7be1884df046",
+        "line": 1,
+        "version": 503,
+        "index": 0
+      }
+    ]
+  }
+}
