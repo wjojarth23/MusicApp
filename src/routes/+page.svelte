@@ -1,4 +1,5 @@
 <script>
+  import { Button } from "$lib/components/ui/button";
 </script>
 
 <svelte:head>
@@ -8,20 +9,10 @@
 
 <section>
   <h1>
-    Welcome to your new<br />SvelteKit app
+    Welcome uto your new<br />SvelteKit app
   </h1>
+<Button>Hello</Button>
 </section>
 
-<style>
-  section {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    flex: 0.6;
-  }
-
-  h1 {
-    width: 100%;
-  }
+<style lang="postcss">
 </style>
