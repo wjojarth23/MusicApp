@@ -27,5 +27,10 @@
     "spotify-web-api-js": "^1.5.2",
     "tailwind-merge": "^2.3.0",
     "tailwind-variants": "^0.2.1"
-  }
+  },
+  "description": "Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).",
+  "main": "postcss.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

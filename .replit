@@ -2,7 +2,7 @@ entrypoint = "src/routes/+page.svelte"
 modules = ["svelte-kit-node-20:v1-20230724-46059dd", "nodejs-20:v10-20231103-2b03dda"]
 
 [nix]
-channel = "stable-22_11"
+channel = "stable-23_05"
 
 [deployment]
 build = ["npm", "run", "build"]
