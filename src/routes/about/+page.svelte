@@ -13,8 +13,7 @@
   let player = null;
   let playlists = [];
   const clientId = "da22f1252f514bb59be6b5588fddaf25";
-  const redirectUri =
-    "https://music-amrw5yi0w-martysmiths-projects.vercel.app/about/"; // Update with your redirect URI
+  const redirectUri = "https://music-app-ruby-six.vercel.app/about/"; // Update with your redirect URI
   const scopes =
     "user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming app-remote-control user-read-email"; // Adjust scopes as needed
 
