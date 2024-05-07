@@ -17,13 +17,14 @@
   let player = null;
   let accessToken = null;
   let playlists = [];
+  let playlistIndex = null;
   let localQueue = [];
   let isChanging = false;
   let selectedPlaylist = null;
-
+let playlistSongs=[];
   const clientId = "da22f1252f514bb59be6b5588fddaf25";
   const redirectUri =
-    "https://4b5870aa-6a5a-490a-9f0a-02334b872cea-00-a5xkmb2gsb82.janeway.replit.dev/about/"; // Update with your redirect URI
+    "https://musicapp-mrva--5173--34455753.local-corp.webcontainer.io/about/"; // Update with your redirect URI
   const scopes =
     "user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming app-remote-control user-read-email"; // Adjust scopes as needed
 
@@ -74,29 +75,9 @@
       if (state.position === 0 && isChanging == false) {
         if (localQueue.length > 0) {
           isChanging = true;
-          let nextSong = localQueue[0];
-          let options = {
-            uris: [nextSong.uri],
-          };
-          //console.log(track.name);
-          spotifyApi.play(options, (error, response) => {
-            if (error) {
-              console.error("Error starting playback:", error);
-            } else {
-              console.log("Playback started successfully:", response);
-              //currentTrack = localQueue[1];
-              //playstate = true;
-              isToggled = false;
-              localQueue = localQueue.slice(1);
-              //setCurrentSong();
-              console.log(nextSong);
-              console.log(response);
-              currentTrack = nextSong;
-              waitReset();
-              //delay(3000);
-              //isChanging = false;
-            }
-          });
+          playNextSongInQueue();
+          waitReset();
+          
         }
         console.log("Song has ended");
         //getQueue();
@@ -166,37 +147,37 @@
       }
     });
   }
-  async function playPlaylist(playlist) {
+  async function playNextSongInQueue(){
+    let nextSong = localQueue[0];
+          let options = {
+            uris: [nextSong.uri],
+          };
+          spotifyApi.play(options, (error, response) => {
+            if (error) {
+              console.error("Error starting playback:", error);
+            } else {
+              console.log("Playback started successfully:", response);
+              localQueue = localQueue.slice(1);
+              isToggled = false;
+              currentTrack = nextSong;
+            }
+          });
+        }
+  async function getPlaylistSongs(playlistid){
+    let playlistSongs = [];
     try {
-      console.log(playlist);
-      let response = await spotifyApi.getPlaylistTracks(playlist.id);
-      console.log(response);
-      let playlistTracks = response.items.map((item) => item.track);
-      console.log(playlistTracks);
-      let playlisttrack = null;
-      for (playlisttrack of playlistTracks) {
-        //await spotifyApi.queue(playlisttrack.uri);
-        //localQueue.push(playlisttrack);
-        localQueue = [...localQueue, playlisttrack];
-        console.log(localQueue);
-      }
-      spotifyApi.play();
-      isToggled = false;
-      let currentTrackId = await spotifyApi.getMyCurrentPlayingTrack();
-      console.log(currentTrackId.item.id);
-      currentTrack = await spotifyApi.getTrack(currentTrackId.item.id);
-      console.log(currentTrack);
-      console.log("queueupdate");
-
-      //getQueue();
-      //console.log(currentTrack.item)
+        let playlistSongsData = await spotifyApi.getPlaylistTracks(playlistid);
+        console.log(playlistSongs);
+        playlistSongs = playlistSongsData.items;
+        console.log(playlistSongs);
     } catch (error) {
-      console.error(
-        "Failed to get playlist tracks or add them to the queue",
-        error,
-      );
+        console.error(error);
     }
-  }
+    console.log(playlistSongs);
+    return playlistSongs;
+}
+
+
 </script>
 
 <svelte:head>
@@ -246,6 +227,7 @@
               <h2>{track.name}</h2>
               <p>{track.artists[0].name}</p>
             </Button>
+            
           </div>
         {/each}
       </div>
@@ -292,7 +274,13 @@
                 /></svg
               >
             {/if}</Button
-          >
+          ><Button
+          variant="ghost"
+          class="flex gap-4 justify-start"
+          on:click={() => spotifyApi.skipToNext()}
+        ><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-skip-end-fill" viewBox="0 0 16 16">
+          <path d="M12.5 4a.5.5 0 0 0-1 0v3.248L5.233 3.612C4.693 3.3 4 3.678 4 4.308v7.384c0 .63.692 1.01 1.233.697L11.5 8.753V12a.5.5 0 0 0 1 0z"/>
+        </svg></Button>
         </div>
       {/if}
     </div>
@@ -302,8 +290,8 @@
         <div class="w-80">
           <Accordion.Root>
             {#each playlists.items as playlist (playlist.id)}
-              <Accordion.Item>
-                <Accordion.Header>
+              <Accordion.Item value=playlist.id>
+                <Accordion.Trigger>
                   <div class="flex gap-4 items-center z-50">
                     {playlist.name}
                     <Button
@@ -324,30 +312,7 @@
                         />
                       </svg></Button
                     >
-                    <Button
-                      variant="ghost"
-                      on:click={() => (selectedPlaylist = playlist.id)}
-                      ><svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="currentColor"
-                        class="bi bi-music-note-list"
-                        viewBox="0 0 16 16"
-                      >
-                        <path
-                          d="M12 13c0 1.105-1.12 2-2.5 2S7 14.105 7 13s1.12-2 2.5-2 2.5.895 2.5 2"
-                        />
-                        <path fill-rule="evenodd" d="M12 3v10h-1V3z" />
-                        <path
-                          d="M11 2.82a1 1 0 0 1 .804-.98l3-.6A1 1 0 0 1 16 2.22V4l-5 1z"
-                        />
-                        <path
-                          fill-rule="evenodd"
-                          d="M0 11.5a.5.5 0 0 1 .5-.5H4a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5m0-4A.5.5 0 0 1 .5 7H8a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5m0-4A.5.5 0 0 1 .5 3H8a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5"
-                        />
-                      </svg></Button
-                    >
+                  
                     <Button variant="ghost"
                       ><svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -363,9 +328,13 @@
                       </svg></Button
                     >
                   </div>
-                </Accordion.Header>
+                </Accordion.Trigger>
                 <Accordion.Content>
-                  <div>selected</div>
+                  <!-- ??? let stuff = getPlaylistSongs(playlist.id) ???
+                  {#each stuff as playlistSong}
+                  {playlistSong.name}
+                  {/each}
+                  <div>selected</div> -->
                 </Accordion.Content>
               </Accordion.Item>
             {/each}
@@ -381,35 +350,42 @@
         <div class="grid gap-4">
           {#if localQueue.length > 0}
             {#each localQueue as queueItem, songIndex}
-              <div class="flex gap-2 w-80 h-12 items-center">
-                <img
-                  src={queueItem.album.images[0].url}
-                  width="25"
-                  height="25"
-                  class="rounded-md"
-                />{queueItem.name}
-                <Button
-                  class="absolute right-0"
-                  variant="ghost"
-                  on:click={() => {
-                    localQueue = localQueue.filter(
-                      (_, index) => index !== songIndex,
-                    );
-                  }}
-                  ><svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="black"
-                    class="bi bi-x"
-                    viewBox="0 0 16 16"
-                  >
-                    <path
-                      d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"
-                    />
-                  </svg></Button
-                >
-              </div>
+            <div class="item-center grid">
+            <Button
+              variant="ghost"
+              class="flex gap-4 justify-start"
+              on:click={() => playTrack(queueItem.uri, queueItem)}
+            >
+              <img
+                src={queueItem.album.images[0].url}
+                width="30"
+                height="30"
+                class="rounded-md"
+              />
+              <h2>{queueItem.name}</h2>
+        </Button>
+        <Button
+              class="absolute right-0"
+              variant="ghost"
+              on:click={() => {
+                localQueue = localQueue.filter(
+                  (_, index) => index !== songIndex,
+                );
+              }}
+              ><svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="black"
+                class="bi bi-x"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"
+                />
+              </svg></Button
+            >
+            </div>
             {/each}
           {/if}
         </div>
