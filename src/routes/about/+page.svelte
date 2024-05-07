@@ -176,6 +176,37 @@ let playlistSongs=[];
     console.log(playlistSongs);
     return playlistSongs;
 }
+async function playPlaylist(playlist) {
+    try {
+      console.log(playlist);
+      let response = await spotifyApi.getPlaylistTracks(playlist.id);
+      console.log(response);
+      let playlistTracks = response.items.map((item) => item.track);
+      console.log(playlistTracks);
+      let playlisttrack = null;
+      for (playlisttrack of playlistTracks) {
+        //await spotifyApi.queue(playlisttrack.uri);
+        //localQueue.push(playlisttrack);
+        localQueue = [...localQueue, playlisttrack];
+        console.log(localQueue);
+      }
+      spotifyApi.play();
+      isToggled = false;
+      let currentTrackId = await spotifyApi.getMyCurrentPlayingTrack();
+      console.log(currentTrackId.item.id);
+      currentTrack = await spotifyApi.getTrack(currentTrackId.item.id);
+      console.log(currentTrack);
+      console.log("queueupdate");
+
+      //getQueue();
+      //console.log(currentTrack.item)
+    } catch (error) {
+      console.error(
+        "Failed to get playlist tracks or add them to the queue",
+        error,
+      );
+    }
+  }
 
 
 </script>
@@ -212,7 +243,7 @@ let playlistSongs=[];
 
       <div class="grid grid-cols-1 gap-2">
         {#each tracks as track (track.id)}
-          <div>
+          <div class="flex flex-row relative">
             <Button
               variant="ghost"
               class="flex gap-4"
@@ -226,6 +257,15 @@ let playlistSongs=[];
               />
               <h2>{track.name}</h2>
               <p>{track.artists[0].name}</p>
+            </Button>
+            <Button
+              variant="ghost"
+              class="flex gap-4 absolute right-0 bg-neutral-50"
+              on:click={() => localQueue = [...localQueue, track]}
+            >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+            </svg>
             </Button>
             
           </div>
@@ -285,7 +325,7 @@ let playlistSongs=[];
       {/if}
     </div>
     <div class="flex relative flex-col gap-4 h-screen w-80">
-      <Button class="w-80">Create Playlist</Button>
+     
       {#if playlists.items}
         <div class="w-80">
           <Accordion.Root>
@@ -330,11 +370,8 @@ let playlistSongs=[];
                   </div>
                 </Accordion.Trigger>
                 <Accordion.Content>
-                  <!-- ??? let stuff = getPlaylistSongs(playlist.id) ???
-                  {#each stuff as playlistSong}
-                  {playlistSong.name}
-                  {/each}
-                  <div>selected</div> -->
+                  
+                  selected
                 </Accordion.Content>
               </Accordion.Item>
             {/each}
