@@ -120,19 +120,20 @@ let playlistSongs=[];
     //setCurrentSong();
     console.log(currentTrack);
   }
-  onMount(async () => {
+  onMount( () => {
+    console.log("onmounted")
     let hashParams = window.location.hash;
     if (hashParams) {
       loginState = true;
       let searchParams = new URLSearchParams(hashParams.substring(1));
       accessToken = searchParams.get("access_token");
       if (accessToken) {
-        await spotifyApi.setAccessToken(accessToken);
-        await initializePlayer();
+        spotifyApi.setAccessToken(accessToken);
+        initializePlayer();
         getUserPlaylistsDetails();
        // const data = await spotifyApi.getUserPlaylists();
         //playlists = data;
-        await delay(3000);
+        //await delay(3000);
         //getQueue();
         setCurrentSong();
         isPaused = true;
