@@ -120,7 +120,6 @@ let playlistSongs=[];
     //setCurrentSong();
     console.log(currentTrack);
   }
-  onMount( () => {
     console.log("onmounted")
     let hashParams = window.location.hash;
     if (hashParams) {
@@ -139,7 +138,6 @@ let playlistSongs=[];
         isPaused = true;
       }
     }
-  });
   async function searchMusic() {
     let data = await spotifyApi.searchTracks(searchQuery);
     searchResultTracks = data.searchResultTracks.items;
