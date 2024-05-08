@@ -6,47 +6,68 @@
   import { Input } from "$lib/components/ui/input";
   import * as Accordion from "$lib/components/ui/accordion";
   import PocketBase from "pocketbase";
-  const pb = new PocketBase("https://feb2024-team5.pockethost.io");
+
+
+  const pb = new PocketBase("https://song-app.pockethost.io");
+
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
-  let tracks = [];
+
+  let searchResultTracks = [];
   let searchQuery = "";
+
   let spotifyApi = new SpotifyWebApi();
+
   let loginState = false;
   let currentTrack = null;
-  let isToggled = false;
+  let isPaused = false;
+  let playlistData = [];
+
   let player = null;
   let accessToken = null;
   let playlists = [];
-  let playlistIndex = null;
   let localQueue = [];
   let isChanging = false;
-  let selectedPlaylist = null;
 let playlistSongs=[];
+
+
   const clientId = "da22f1252f514bb59be6b5588fddaf25";
   const redirectUri =
-    "https://musicapp-mrva--5173--34455753.local-corp.webcontainer.io/about/"; // Update with your redirect URI
+    "https://music-app-ruby-six.vercel.app/about/"; // Update with your redirect URI
   const scopes =
     "user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming app-remote-control user-read-email"; // Adjust scopes as needed
-
   const loginUrl = new URL("https://accounts.spotify.com/authorize");
-
   loginUrl.searchParams.set("client_id", clientId);
   loginUrl.searchParams.set("redirect_uri", redirectUri);
   loginUrl.searchParams.set("scope", scopes);
   loginUrl.searchParams.set("response_type", "token");
+
+
   async function setCurrentSong() {
     let currentTrackId = await spotifyApi.getMyCurrentPlayingTrack();
     console.log(currentTrackId.item.id);
     currentTrack = await spotifyApi.getTrack(currentTrackId.item.id);
   }
+  async function getUserPlaylistsDetails(userId) {
+    try {
+        const playlistsResponse = await spotifyApi.getUserPlaylists(userId);
+        const fetchedPlaylists = playlistsResponse.items;
 
+
+        for (let playlist of fetchedPlaylists) {
+            const details = await spotifyApi.getPlaylist(playlist.id);
+            playlistData = [...playlistData,details]
+        }
+    } catch (error) {
+        console.error('Failed to get playlists details:', error);
+    }
+}
   async function initializePlayer() {
     player = new Spotify.Player({
-      name: "Web Playback SDK Quick Start Player",
+      name: "Supermusic Player",
       getOAuthToken: (cb) => {
         cb(accessToken);
       },
-      volume: 0.5,
+      volume: 0.7,
     });
 
     // Ready
@@ -66,6 +87,7 @@ let playlistSongs=[];
 
     player.addListener("authentication_error", ({ message }) => {
       console.error(message);
+      throw redirect(308, '/');
     });
 
     player.addListener("account_error", ({ message }) => {
@@ -103,30 +125,23 @@ let playlistSongs=[];
     if (hashParams) {
       loginState = true;
       let searchParams = new URLSearchParams(hashParams.substring(1));
-
-      // Get the access token
       accessToken = searchParams.get("access_token");
       if (accessToken) {
-        console.log(typeof accessToken);
-
-        // Log the access token
-        console.log("Access Token: " + accessToken);
         await spotifyApi.setAccessToken(accessToken);
-        console.log("queue...");
         await initializePlayer();
-
-        const data = await spotifyApi.getUserPlaylists();
-        playlists = data;
+        getUserPlaylistsDetails();
+       // const data = await spotifyApi.getUserPlaylists();
+        //playlists = data;
         await delay(3000);
         //getQueue();
         setCurrentSong();
-        isToggled = true;
+        isPaused = true;
       }
     }
   });
   async function searchMusic() {
     let data = await spotifyApi.searchTracks(searchQuery);
-    tracks = data.tracks.items;
+    searchResultTracks = data.searchResultTracks.items;
   }
 
   async function playTrack(uri, track) {
@@ -142,7 +157,7 @@ let playlistSongs=[];
         console.log("Playback started successfully:", response);
         currentTrack = track;
         //playstate = true;
-        isToggled = false;
+        isPaused = false;
         waitReset();
       }
     });
@@ -158,7 +173,7 @@ let playlistSongs=[];
             } else {
               console.log("Playback started successfully:", response);
               localQueue = localQueue.slice(1);
-              isToggled = false;
+              isPaused = false;
               currentTrack = nextSong;
             }
           });
@@ -191,7 +206,7 @@ async function playPlaylist(playlist) {
         console.log(localQueue);
       }
       spotifyApi.play();
-      isToggled = false;
+      isPaused = false;
       let currentTrackId = await spotifyApi.getMyCurrentPlayingTrack();
       console.log(currentTrackId.item.id);
       currentTrack = await spotifyApi.getTrack(currentTrackId.item.id);
@@ -202,7 +217,7 @@ async function playPlaylist(playlist) {
       //console.log(currentTrack.item)
     } catch (error) {
       console.error(
-        "Failed to get playlist tracks or add them to the queue",
+        "Failed to get playlist searchResultTracks or add them to the queue",
         error,
       );
     }
@@ -242,7 +257,7 @@ async function playPlaylist(playlist) {
       </div>
 
       <div class="grid grid-cols-1 gap-2">
-        {#each tracks as track (track.id)}
+        {#each searchResultTracks as track (track.id)}
           <div class="flex flex-row relative">
             <Button
               variant="ghost"
@@ -285,10 +300,10 @@ async function playPlaylist(playlist) {
           <Button
             variant="ghost"
             on:click={() => {
-              isToggled = !isToggled;
+              isPaused = !isPaused;
               player.togglePlay();
             }}
-            >{#if isToggled}
+            >{#if isPaused}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -326,13 +341,14 @@ async function playPlaylist(playlist) {
     </div>
     <div class="flex relative flex-col gap-4 h-screen w-80">
      
-      {#if playlists.items}
+      {#if playlistData}
         <div class="w-80">
           <Accordion.Root>
-            {#each playlists.items as playlist (playlist.id)}
-              <Accordion.Item value=playlist.id>
+            {#each playlistData as playlist, playlistIndex}
+              <Accordion.Item value=playlist.id class="border-b-0 h-12">
                 <Accordion.Trigger>
                   <div class="flex gap-4 items-center z-50">
+                    {console.log(playlist)}
                     {playlist.name}
                     <Button
                       variant="ghost"
@@ -370,8 +386,9 @@ async function playPlaylist(playlist) {
                   </div>
                 </Accordion.Trigger>
                 <Accordion.Content>
-                  
-                  selected
+                  {#each playlist.tracks.items as playlistSong, index}
+                  {playlistSong.name}
+                  {/each}
                 </Accordion.Content>
               </Accordion.Item>
             {/each}
